@@ -1,0 +1,8 @@
+.env
+.env.*
+node_modules
+creds.json
+test.js
+creds.production.json
+build
+prisma/migrations

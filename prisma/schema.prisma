@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+model Calendar {
+  @@id([ownerId, id])
+  ownerId                 String      @db.VarChar(255)
+  id                      String      @db.VarChar(255) 
+  kind                    String?     @db.VarChar(255)
+  etag                    String?     @db.VarChar(255)
+  location                String?     @db.VarChar(255)
+  summary                 String?     @db.VarChar(255)
+  timeZone                String?     @db.VarChar(255)
+  summaryOverride         String?     @db.VarChar(255)
+  colorId                 String?     @db.VarChar(255)
+  backgroundColor         String?     @db.VarChar(255)
+  foregroundColor         String?     @db.VarChar(255)
+  hidden                  Boolean?    @db.Boolean
+  selected                Boolean?    @db.Boolean
+  accessRole              String?     @db.VarChar(255)
+  primary                 Boolean?    @db.Boolean
+  deleted                 Boolean?    @db.Boolean
+  owner                   User        @relation(fields: [ownerId], references: [id])
+}
+
+model User {
+  @@map(name: "users")
+  id                        String    @default(uuid()) @id
+  name                      String?   @db.VarChar(255)
+  email                     String    @db.VarChar(255) @unique
+  token                     Json      @db.Json
+  notion_access_token       Json?     @db.Json
+  pfpUrl                    String?   @db.VarChar(512)
+  calendars                 Calendar[]
+  integrations              Integration[]
+  pages                     NotionPage[]
+  NotionConnected           Boolean   @default(false)
+}
+
+model Integration {
+  id               String    @id @default(uuid())
+  name             String    @db.VarChar(255) 
+  notionDatabaseID String    @db.VarChar(255)
+  disabled         Boolean   @default(false)
+  nextSyncToken    String?   @db.VarChar(512)
+  calendar_name    String    @db.VarChar(512)
+  owner_id         String    @db.VarChar(255)
+  calendar_id      String    @db.VarChar(255)
+  url              String?   @db.VarChar(512)
+  owner            User      @relation(fields: [owner_id], references: [id])
+  Events           Event[]
+}
+
+model NotionPage {
+  id                String       @db.VarChar(255) @id
+  title             String       @db.VarChar(255)
+  url               String       @db.VarChar(255)
+  last_edited_time  String       @db.VarChar(255)
+  created_time      String       @db.VarChar(255)
+  userID            String       @db.VarChar(255)
+  owner             User         @relation(fields: [userID], references: [id])
+}
+
+model Event {
+  id                    String               @db.VarChar(255) 
+  summary               String?              @db.VarChar(512)
+  start                 DateTime?            @db.Timestamptz(3)
+  end                   DateTime?            @db.Timestamptz(3)
+  created               BigInt?              @db.BigInt()
+  parent_integration_id String               @db.VarChar(255)
+  parent_integration    Integration          @relation(fields: [parent_integration_id], references: [id])
+
+  @@id([id, parent_integration_id])
+}
+
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String
+  expiresAt   DateTime
+}
